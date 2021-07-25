@@ -1,0 +1,19 @@
+# Apache Ignite
+ignite:
+    -   name: igniteServerBean01
+        igniteBinary: /etc/apache-ignite-2.10.0/bin/ignite.sh
+        igniteConfig: /etc/apache-ignite/config/ignite-config.xml
+        clientPort: 10800
+        tls:
+            local_cert: /path/to/client/cert
+            cafile: /path/to/ca/file
+            local_pk: /path/to/key/file
+        userName: a
+        password: b
+
+
+# Redis
+redis:
+    -   name: redisServerBean01
+        serverBinary: /usr/local/bin/redis-server
+        confFile: /etc/redis/redis.conf

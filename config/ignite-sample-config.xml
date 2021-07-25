@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="
+        http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+	<bean class="org.apache.ignite.configuration.IgniteConfiguration">
+
+		<property name="workDirectory" value="/tmp"/>
+		<property name="rebalanceThreadPoolSize" value="2"/>
+
+		<property name="discoverySpi">
+			<bean class="org.apache.ignite.spi.discovery.tcp.TcpDiscoverySpi">
+				<property name="localPort" value="47500"/>
+				<property name="localPortRange" value="47500..47509"/>
+			</bean>
+		</property>
+
+		<property name="communicationSpi">
+			<bean class="org.apache.ignite.spi.communication.tcp.TcpCommunicationSpi">
+				<property name="localPort" value="47100"/>
+				<property name="localPortRange" value="47100..47109"/>
+			</bean>
+		</property>
+
+		<property name="clientConnectorConfiguration">
+			<bean class="org.apache.ignite.configuration.ClientConnectorConfiguration">
+				<property name="port" value="10800"/>
+				<property name="thinClientEnabled" value="true"/>
+				<property name="sslEnabled" value="false"/>
+			</bean>
+		</property>
+
+		<!--
+		<property name="dataStorageConfiguration">
+			<bean class="org.apache.ignite.configuration.DataStorageConfiguration">
+				<property name="defaultDataRegionConfiguration">
+					<bean class="org.apache.ignite.configuration.DataRegionConfiguration">
+						<property name="persistenceEnabled" value="true"/>
+					</bean>
+				</property>
+			</bean>
+		</property>
+		-->
+
+		<!-- This requires persistent storage be enabled for at least one data region -->
+		<property name="authenticationEnabled" value="false"/>
+
+		<property name="failureDetectionTimeout" value="5000"/>
+		<property name="clientFailureDetectionTimeout" value="10000"/>
+
+		<property name="cacheConfiguration">
+			<list>
+				<!-- Cache-1 -->
+				<bean class="org.apache.ignite.configuration.CacheConfiguration">
+					<!-- Set the cache name. -->
+					<property name="name" value="myCache"/>
+					<!-- Set the cache mode. -->
+					<property name="cacheMode" value="PARTITIONED"/>
+					<property name="backups" value="2"/>
+					<property name="rebalanceMode" value="SYNC"/>
+					<property name="writeSynchronizationMode" value="FULL_SYNC"/>
+					<property name="partitionLossPolicy" value="READ_ONLY_SAFE"/>
+					<!-- Set rebalance  batch size. -->
+					<property name="rebalanceBatchSize" value="#{2 * 1024 * 1024}"/>
+					<!-- Set rebalance throttle interval. -->
+					<property name="rebalanceThrottle" value="100"/>
+				</bean>
+				<!-- Cache-2 -->
+				<bean class="org.apache.ignite.configuration.CacheConfiguration">
+					<property name="name" value="Person"/>
+					<property name="cacheMode" value="PARTITIONED"/>
+					<property name="atomicityMode" value="TRANSACTIONAL"/>
+					<property name="writeSynchronizationMode" value="FULL_SYNC"/>
+
+					<property name="queryEntities">
+						<list>
+							<bean class="org.apache.ignite.cache.QueryEntity">
+								<property name="keyType" value="java.lang.Long"/>
+								<property name="valueType" value="Person"/>
+
+								<property name="fields">
+									<map>
+										<entry key="firstName" value="java.lang.String"/>
+										<entry key="lastName" value="java.lang.String"/>
+										<entry key="resume" value="java.lang.String"/>
+										<entry key="salary" value="java.lang.Integer"/>
+									</map>
+								</property>
+
+								<property name="indexes">
+									<list>
+										<bean class="org.apache.ignite.cache.QueryIndex">
+											<constructor-arg value="salary"/>
+										</bean>
+									</list>
+								</property>
+							</bean>
+						</list>
+					</property>
+				</bean>
+			</list>
+		</property>
+	</bean>
+</beans>

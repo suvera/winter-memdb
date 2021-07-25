@@ -1,0 +1,30 @@
+{
+    "name": "suvera/winter-memdb",
+    "description": "Winter Memdb module supports many In memory databases, such as Apache Ignite, Redis, Memcached etc..",
+    "type": "library",
+    "homepage": "https://suvera.github.io/",
+    "config": {
+        "platform": {
+            "php": "8.0"
+        }
+    },
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Suvera"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "dev\\winterframework\\memdb\\": "src/"
+        }
+    },
+    "minimum-stability": "dev",
+    "repositories": [
+    ],
+    "require": {
+        "ext-swoole": "*",
+        "gridgain/client": "dev-master",
+        "ext-posix": "*"
+    }
+}
