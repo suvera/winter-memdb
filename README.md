@@ -1,8 +1,8 @@
 # WinterBoot Module - Memdb
 
-Winter Memory DB (memdb) is a module that provides in-memory database engines integrated into winter-boot framework.
+Winter Memory DB (memdb) is a module that provides in-memory database engines integrated into [winter-boot](https://github.com/suvera/winter-boot) framework.
 
-Following databases maybe integrated, stared on application startup and stopped upon application stop.
+Following databases maybe integrated, Auto-started on application startup and stopped upon application stop.
 
 - Redis
 - Apache Ignite
