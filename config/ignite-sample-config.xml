@@ -25,11 +25,36 @@
 			</bean>
 		</property>
 
+		<property name="sslContextFactory">
+			<bean class="org.apache.ignite.ssl.SslContextFactory">
+				<property name="keyStoreFilePath" value="keystore/node.jks"/>
+				<property name="keyStorePassword" value="123456"/>
+				<property name="trustStoreFilePath" value="keystore/trust.jks"/>
+				<property name="trustStorePassword" value="123456"/>
+				<property name="protocol" value="TLSv1.3"/>
+			</bean>
+		</property>
+
 		<property name="clientConnectorConfiguration">
 			<bean class="org.apache.ignite.configuration.ClientConnectorConfiguration">
 				<property name="port" value="10800"/>
 				<property name="thinClientEnabled" value="true"/>
 				<property name="sslEnabled" value="false"/>
+				<property name="useIgniteSslContextFactory" value="false"/>
+				<!-- You can re-use the SSLContextFactory configured for nodes,
+				  (or) you can configure an SSLContext factory that will be used for client connections only. -->
+				<property name="sslContextFactory">
+					<bean class="org.apache.ignite.ssl.SslContextFactory">
+						<property name="keyStoreFilePath" value="/path/to/server.jks"/>
+						<property name="keyStorePassword" value="123456"/>
+						<!-- Disabling Certificate Validation -->
+						<property name="trustManagers">
+							<bean class="org.apache.ignite.ssl.SslContextFactory" factory-method="getDisabledTrustManager"/>
+						</property>
+						<property name="trustStoreFilePath" value="/path/to/trust.jks"/>
+						<property name="trustStorePassword" value="123456"/>
+					</bean>
+				</property>
 			</bean>
 		</property>
 

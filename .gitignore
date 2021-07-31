@@ -17,6 +17,7 @@
 *.iml
 *.ipr
 
+dump.rdb
 config/config.php
 test.log
 test.php

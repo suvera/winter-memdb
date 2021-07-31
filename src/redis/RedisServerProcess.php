@@ -65,16 +65,7 @@ class RedisServerProcess extends MonitoringServerProcess {
     }
 
     protected function onProcessStart(): void {
-        while (!file_exists($this->pidFile)) {
-            \Co::sleep(0.3);
-        }
-        $pid = intval(file_get_contents($this->pidFile));
-        if ($pid) {
-            posix_setpgid($pid, $this->wServer->getServer()->master_pid);
-            $this->wServer->addPid('redis-node-' . $this->workerId, $pid, ProcessType::OTHER);
-        }
-
-        self::logInfo('Redis Server started on port ' . $this->address . ':' . $this->port . ' pid:' . $pid);
+        self::logInfo('Redis Server started on port ' . $this->address . ':' . $this->port);
     }
 
     protected function onProcessError(): void {

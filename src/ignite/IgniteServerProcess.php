@@ -8,8 +8,14 @@ use dev\winterframework\core\context\WinterServer;
 use dev\winterframework\io\process\MonitoringServerProcess;
 use dev\winterframework\io\process\ProcessType;
 use dev\winterframework\memdb\exception\MemdbException;
+use dev\winterframework\memdb\ignite\config\IgniteXmlConfig;
+use dev\winterframework\memdb\ignite\config\IgniteXmlConfigBuilder;
+use dev\winterframework\type\Arrays;
 
 class IgniteServerProcess extends MonitoringServerProcess {
+
+    private string $address = '127.0.0.1';
+    protected IgniteXmlConfig $xmlConfig;
 
     public function __construct(
         WinterServer $wServer,
@@ -18,6 +24,17 @@ class IgniteServerProcess extends MonitoringServerProcess {
         protected array $config
     ) {
         parent::__construct($wServer, $ctx);
+        Arrays::assertKey($this->config, 'serverBinary', 'invalid Memdb Ignite config');
+        Arrays::assertKey($this->config, 'confFile', 'invalid Memdb Ignite config');
+        $this->parse();
+    }
+
+    protected function parse(): void {
+        if (!file_exists($this->config['confFile'])) {
+            throw new MemdbException('Could not find Ignite conf file');
+        }
+        $builder = new IgniteXmlConfigBuilder();
+        $this->xmlConfig = $builder->build($this->config['confFile']);
     }
 
     public function getChildProcessId(): string {
@@ -37,7 +54,8 @@ class IgniteServerProcess extends MonitoringServerProcess {
     }
 
     protected function onProcessStart(): void {
-        self::logInfo('Ignite Server started on port ' . $this->address . ':' . $this->port);
+        self::logInfo('Ignite Server started on port '
+            . $this->address . ':' . $this->xmlConfig->getPort());
     }
 
     protected function onProcessError(): void {
@@ -49,6 +67,23 @@ class IgniteServerProcess extends MonitoringServerProcess {
     }
 
     protected function run(): void {
-        // TODO: Implement run() method.
+        $cmd = $this->config['serverBinary'] . ' ' . $this->config['confFile'];
+        self::logInfo($cmd);
+
+        $lineArgs = [];
+        $this->launchAndMonitor($cmd, $lineArgs);
     }
+
+    public function getAddress(): string {
+        return $this->address;
+    }
+
+    public function getPort(): int {
+        return $this->xmlConfig->getPort();
+    }
+
+    public function getXmlConfig(): IgniteXmlConfig {
+        return $this->xmlConfig;
+    }
+
 }

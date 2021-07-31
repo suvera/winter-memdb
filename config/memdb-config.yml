@@ -1,9 +1,8 @@
 # Apache Ignite
 ignite:
     -   name: igniteServerBean01
-        igniteBinary: /etc/apache-ignite-2.10.0/bin/ignite.sh
-        igniteConfig: /etc/apache-ignite/config/ignite-config.xml
-        clientPort: 10800
+        serverBinary: /etc/apache-ignite-2.10.0/bin/ignite.sh
+        confFile: /etc/apache-ignite/config/ignite-config.xml
         tls:
             local_cert: /path/to/client/cert
             cafile: /path/to/ca/file
@@ -17,3 +16,14 @@ redis:
     -   name: redisServerBean01
         serverBinary: /usr/local/bin/redis-server
         confFile: /etc/redis/redis.conf
+
+# Memcached
+memcached:
+    -   name: memcachedBean01
+        serverBinary: /usr/bin/memcached
+        host: 127.0.0.1
+        port: 11211
+        udpPort: 0
+        unixSocket: a
+        pidfile: "/var/run/memcached_1.pid"
+        args: ""
