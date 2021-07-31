@@ -153,7 +153,7 @@ hazelcast:
 
 ```phpt
 #[Autowired('hazelcastBean01)]
-private MemcachedTemplate $memcached;
+private MemcachedTemplate $hazelcast;
 ```
 
 > Note: Hazelcast configuration need memcache enabled.  see it here https://docs.hazelcast.com/imdg/4.2/clients/memcache.html
