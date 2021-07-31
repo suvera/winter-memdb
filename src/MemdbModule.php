@@ -1,4 +1,5 @@
 <?php
+/** @noinspection DuplicatedCode */
 declare(strict_types=1);
 
 namespace dev\winterframework\memdb;
@@ -21,6 +22,7 @@ use dev\winterframework\exception\BeansException;
 use dev\winterframework\exception\ModuleException;
 use dev\winterframework\io\timer\IdleCheckRegistry;
 use dev\winterframework\memdb\exception\MemdbException;
+use dev\winterframework\memdb\hazelcast\HazelcastServerProcess;
 use dev\winterframework\memdb\ignite\IgniteCacheTemplate;
 use dev\winterframework\memdb\ignite\IgniteServerProcess;
 use dev\winterframework\memdb\memcached\MemcachedServerProcess;
@@ -54,6 +56,10 @@ class MemdbModule implements WinterModule {
 
         if (isset($config['ignite']) && is_array($config['ignite'])) {
             $this->buildIgniteServers($config, $ctx, $ctxData);
+        }
+
+        if (isset($config['hazelcast']) && is_array($config['hazelcast'])) {
+            $this->buildHazelcastServers($config, $ctx, $ctxData);
         }
     }
 
@@ -96,7 +102,7 @@ class MemdbModule implements WinterModule {
 
             $dataConfig = [
                 'name' => $server['name'],
-                'idleTimeout' => 20,
+                'idleTimeout' => 300,
                 'timeout' => 2,
                 'host' => $address[0] ?: '127.0.0.1',
                 'port' => $ps->getPort()
@@ -163,7 +169,7 @@ class MemdbModule implements WinterModule {
 
             $dataConfig = [
                 'name' => $server['name'],
-                'idleTimeout' => 20,
+                'idleTimeout' => 300,
                 'timeout' => 2,
                 'servers' => $hosts
             ];
@@ -215,11 +221,7 @@ class MemdbModule implements WinterModule {
                     . "' Memdb ignite bean name conflicts with other bean");
             }
 
-            $startUpTimeMs = $server['startUpTimeMs'] ?? 5000;
-            $startUpTimeMs = intval($startUpTimeMs);
-            if ($startUpTimeMs < 0) {
-                $startUpTimeMs = 5000;
-            }
+            $startUpTimeMs = $this->getBootUpTime($server, 5000);
 
             try {
                 $ic = new ClientConfiguration($ps->getAddress() . ':' . $ps->getPort());
@@ -261,6 +263,78 @@ class MemdbModule implements WinterModule {
         }
 
         self::logInfo('Loading "Ignite" Servers ... Done!');
+    }
+
+    protected function buildHazelcastServers(
+        array $config,
+        ApplicationContext $ctx,
+        ApplicationContextData $ctxData
+    ): void {
+        /** @var WinterServer $executor */
+        $wServer = $ctx->beanByClass(WinterServer::class);
+        $servers = $config['hazelcast'];
+
+        /** @var WinterBeanProviderContext $beanProvider */
+        $beanProvider = $ctxData->getBeanProvider();
+        /** @var IdleCheckRegistry $idleCheck */
+        $idleCheck = $ctx->beanByClass(IdleCheckRegistry::class);
+
+        foreach ($servers as $id => $server) {
+            $id = $id + 1;
+            if (!isset($server['name'])) {
+                $server['name'] = 'memdb-hazelcast-' . $id;
+            }
+            if (isset($server['confFile'])) {
+                $server['confFile'] = ConfigFileLoader::retrieveConfigurationFile($ctxData, $server['confFile']);
+            }
+            $ps = new HazelcastServerProcess($wServer, $ctx, $id, $server);
+            $wServer->addProcess($ps);
+
+            if ($ctx->hasBeanByName($server['name'])) {
+                throw new BeansException("Bean already exist with name '" . $server['name']
+                    . "' Memdb hazelcast bean name conflicts with other bean");
+            }
+
+            $startUpTimeMs = $this->getBootUpTime($server, 5000);
+
+            $hosts = [];
+            $address = $ps->getAddress();
+            $port = $ps->getPort();
+            $hosts[] = [
+                'host' => $address,
+                'port' => $port,
+                'weight' => 0
+            ];
+
+            $dataConfig = [
+                'name' => $server['name'],
+                'idleTimeout' => 300,
+                'bootUpTimeMs' => $startUpTimeMs,
+                'timeout' => 2,
+                'servers' => $hosts
+            ];
+
+            $tpl = new MemcachedTemplateImpl($dataConfig, true);
+            $beanProvider->registerInternalBean(
+                $tpl,
+                MemcachedTemplate::class,
+                false,
+                $dataConfig['name'],
+                true
+            );
+            $beanProvider->beanByName($dataConfig['name']);
+            $beanProvider->beanByNameClass($dataConfig['name'], MemcachedTemplate::class);
+            self::logInfo("Hazelcast Bean " . $dataConfig['name'] . ' Created!');
+            $idleCheck->register([$tpl, 'checkIdleConnection']);
+        }
+
+        self::logInfo('Loading "Hazelcast" Servers ... Done!');
+    }
+
+    protected function getBootUpTime(mixed $server, int $default): int {
+        $startUpTimeMs = $server['bootUpTimeMs'] ?? $default;
+        $startUpTimeMs = intval($startUpTimeMs);
+        return ($startUpTimeMs <= 0) ? $default : $startUpTimeMs;
     }
 
 }

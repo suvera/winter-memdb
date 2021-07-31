@@ -3,6 +3,8 @@ ignite:
     -   name: igniteServerBean01
         serverBinary: /etc/apache-ignite-2.10.0/bin/ignite.sh
         confFile: /etc/apache-ignite/config/ignite-config.xml
+        args: ""
+        bootUpTimeMs: 3000
         tls:
             local_cert: /path/to/client/cert
             cafile: /path/to/ca/file
@@ -16,6 +18,8 @@ redis:
     -   name: redisServerBean01
         serverBinary: /usr/local/bin/redis-server
         confFile: /etc/redis/redis.conf
+        bootUpTimeMs: 300
+        args: ""
 
 # Memcached
 memcached:
@@ -26,4 +30,13 @@ memcached:
         udpPort: 0
         unixSocket: a
         pidfile: "/var/run/memcached_1.pid"
+        args: "-u memcached"
+        bootUpTimeMs: 300
+
+# Hazelcast
+hazelcast:
+    -   name: hazelcastBean01
+        serverBinary: etc/hazelcast-4.2.1/bin/start.sh
+        confFile: /etc/hazelcast/config/hazelcast.xml
+        bootUpTimeMs: 300
         args: ""

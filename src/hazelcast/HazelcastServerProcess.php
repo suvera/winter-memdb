@@ -1,21 +1,21 @@
 <?php
 declare(strict_types=1);
 
-namespace dev\winterframework\memdb\ignite;
+namespace dev\winterframework\memdb\hazelcast;
 
 use dev\winterframework\core\context\ApplicationContext;
 use dev\winterframework\core\context\WinterServer;
 use dev\winterframework\io\process\MonitoringServerProcess;
 use dev\winterframework\io\process\ProcessType;
 use dev\winterframework\memdb\exception\MemdbException;
-use dev\winterframework\memdb\ignite\config\IgniteXmlConfig;
-use dev\winterframework\memdb\ignite\config\IgniteXmlConfigBuilder;
+use dev\winterframework\memdb\hazelcast\config\HazelcastConfig;
+use dev\winterframework\memdb\hazelcast\config\HazelcastConfigBuilder;
 use dev\winterframework\type\Arrays;
 
-class IgniteServerProcess extends MonitoringServerProcess {
+class HazelcastServerProcess extends MonitoringServerProcess {
 
     private string $address = '127.0.0.1';
-    protected IgniteXmlConfig $xmlConfig;
+    protected HazelcastConfig $xmlConfig;
 
     public function __construct(
         WinterServer $wServer,
@@ -24,33 +24,32 @@ class IgniteServerProcess extends MonitoringServerProcess {
         protected array $config
     ) {
         parent::__construct($wServer, $ctx);
-        Arrays::assertKey($this->config, 'serverBinary', 'invalid Memdb Ignite config');
+        Arrays::assertKey($this->config, 'serverBinary', 'invalid Memdb Hazelcast config');
         $this->parse();
     }
 
     protected function parse(): void {
         if (isset($this->config['confFile'])) {
             if (file_exists($this->config['confFile'])) {
-                $builder = new IgniteXmlConfigBuilder();
+                $builder = new HazelcastConfigBuilder();
                 $this->xmlConfig = $builder->build($this->config['confFile']);
             } else {
-                throw new MemdbException('Could not find Ignite conf file');
+                throw new MemdbException('Could not find Hazelcast conf file');
             }
         } else {
-            $this->xmlConfig = new IgniteXmlConfig();
+            $this->xmlConfig = new HazelcastConfig();
             if (isset($this->config['port'])) {
                 $this->xmlConfig->setPort(intval($this->config['port']));
             }
         }
-
     }
 
     public function getChildProcessId(): string {
-        return 'ignite-server-' . $this->workerId;
+        return 'hazelcast-server-' . $this->workerId;
     }
 
     public function getProcessId(): string {
-        return 'ignite-monitor-' . $this->workerId;
+        return 'hazelcast-monitor-' . $this->workerId;
     }
 
     public function getChildProcessType(): int {
@@ -62,21 +61,25 @@ class IgniteServerProcess extends MonitoringServerProcess {
     }
 
     protected function onProcessStart(): void {
-        self::logInfo('Ignite Server started on port '
+        self::logInfo('Hazelcast Server started on port '
             . $this->address . ':' . $this->xmlConfig->getPort());
     }
 
     protected function onProcessError(): void {
-        throw new MemdbException('Could not span Ignite Service process');
+        throw new MemdbException('Could not span Hazelcast Service process');
     }
 
     protected function onProcessDead(): void {
-        throw new MemdbException('Could not span Ignite Service process');
+        throw new MemdbException('Could not span Hazelcast Service process');
     }
 
     /** @noinspection DuplicatedCode */
     protected function run(): void {
-        $cmd = $this->config['serverBinary'] . ' ' . $this->config['confFile'];
+        $cmd = '';
+        if (isset($this->config['confFile'])) {
+            $cmd .= 'export JAVA_OPTS="$JAVA_OPTS -Dhazelcast.config=' . $this->config['confFile'] . '" && ';
+        }
+        $cmd .= $this->config['serverBinary'];
         $args = $data['args'] ?? '';
         $cmd .= ' ' . $args;
 
@@ -94,7 +97,7 @@ class IgniteServerProcess extends MonitoringServerProcess {
         return $this->xmlConfig->getPort();
     }
 
-    public function getXmlConfig(): IgniteXmlConfig {
+    public function getXmlConfig(): HazelcastConfig {
         return $this->xmlConfig;
     }
 

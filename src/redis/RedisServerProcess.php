@@ -18,10 +18,10 @@ class RedisServerProcess extends MonitoringServerProcess {
     protected string $pidFile;
 
     public function __construct(
-        WinterServer $wServer,
-        ApplicationContext $ctx,
+        WinterServer         $wServer,
+        ApplicationContext   $ctx,
         protected string|int $workerId,
-        protected array $config
+        protected array      $config
     ) {
         parent::__construct($wServer, $ctx);
         Arrays::assertKey($this->config, 'serverBinary', 'invalid Memdb redis config');
@@ -76,8 +76,12 @@ class RedisServerProcess extends MonitoringServerProcess {
         throw new MemdbException('Redis Service is down');
     }
 
+    /** @noinspection DuplicatedCode */
     protected function run(): void {
         $cmd = $this->config['serverBinary'] . ' ' . $this->config['confFile'];
+        $args = $data['args'] ?? '';
+        $cmd .= ' ' . $args;
+
         self::logInfo($cmd);
 
         $lineArgs = [];
