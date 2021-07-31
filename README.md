@@ -39,13 +39,20 @@ modules:
 redis:
 # Redis Configuration here, see below section
 
+
 # Apache Ignite
 ignite:
 # Apache Ignite Configuration here
 
+
 # Memcached
 memcached:
 # Memcached Configuration here
+
+
+# Hazelcast
+hazelcast:
+# Hazelcast Configuration here
 ```
 
 ### 1. Redis
@@ -149,7 +156,7 @@ hazelcast:
 private MemcachedTemplate $memcached;
 ```
 
->> Note: Hazelcast configuration need memcache enabled.  see it here https://docs.hazelcast.com/imdg/4.2/clients/memcache.html
+> Note: Hazelcast configuration need memcache enabled.  see it here https://docs.hazelcast.com/imdg/4.2/clients/memcache.html
 
 ```xml
 <hazelcast>
